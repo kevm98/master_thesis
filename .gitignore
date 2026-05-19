@@ -1,0 +1,60 @@
+# Ignore Python cache directories
+__pycache__/
+
+# Ignore all directories containing ".egg-info"
+*.egg-info/
+
+# Ignore log files
+logs/
+
+# Ignore output files
+outputs/
+
+# Ignore files beginning with .nfs
+.nfs*
+
+.thumbs/
+
+datasets/
+
+
+runs/
+
+.vscode/
+__pycache__/
+*.pyc
+
+# Python environments
+.env/
+.venv/
+env/
+venv/
+miniconda3/
+conda/
+
+# Large ML / simulation files
+*.pth
+*.pt
+*.onnx
+*.mat
+*.h5
+*.hdf5
+*.npz
+*.npy
+*.zip
+*.tar.gz
+
+# Logs and cache
+*.log
+logs/
+outputs/
+runs/
+wandb/
+.cache/
+
+# Isaac / Omniverse generated files
+*.usd~
+*.usdc
+*.usda
+*.sqlite
+kit/logs/
