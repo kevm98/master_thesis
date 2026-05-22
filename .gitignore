@@ -33,7 +33,6 @@ miniconda3/
 conda/
 
 # Large ML / simulation files
-*.pth
 *.pt
 *.onnx
 *.mat
