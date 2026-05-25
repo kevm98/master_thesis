@@ -1,13 +1,67 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any, Mapping, Optional
+
+import numpy as np
+
+from kevin_integration.controllers import LearnedControlPipeline, PipelineConfig
+
+
 class ControlPolicy:
-    """A simple policy interface for Kevin integration."""
+    """Learned-model-based control policy for the Kevin integration branch.
 
-    def __init__(self, config=None):
-        self.config = config or {}
+    This policy wraps the learned-model pipeline (AAM -> ID [+ optional SD/FD predictions]).
 
-    def compute_action(self, observation):
-        """Compute an action from a robot observation.
+    Expected `observation` input format:
+    - `aam_x_t`: (18,) = [q(5), qdot(5), dP(4), valve_cmd(4)]
+    - `id_x_t`:  (19,) = [q(5), qdot(5), qddot(5), dP(4)]
+    Optional:
+    - `sd_x_t`:  (22,) = [q(5), qdot(5), dP(4), Fnet(4), valve_cmd(4)]
+    - `fd_x_t`:  (18,) = [q(5), qdot(5), dP(4), valve_cmd(4)]
 
-        Replace this stub logic with your actual controller.
-        """
-        # Example: return the observation unchanged.
-        return observation
+    The feature ordering must match whatever you used during model training.
+    """
+
+    def __init__(self, config: Optional[Mapping[str, Any]] = None):
+        self.config = dict(config or {})
+
+        models_dir = self.config.get("models_dir")
+        if models_dir is None:
+            models_dir = Path(__file__).resolve().parents[1] / "models"
+        models_dir = Path(models_dir)
+
+        pipeline_cfg = PipelineConfig(**self.config.get("pipeline", {}))
+        self._pipeline = LearnedControlPipeline(models_dir=models_dir, cfg=pipeline_cfg)
+        self._return_debug = bool(self.config.get("return_debug", False))
+
+    def reset(self) -> None:
+        self._pipeline.reset()
+
+    def compute_action(self, observation: Mapping[str, Any]):
+        if not isinstance(observation, Mapping):
+            raise TypeError("observation must be a mapping with keys: aam_x_t, id_x_t, ...")
+
+        aam_x_t = np.asarray(observation["aam_x_t"], dtype=np.float32).reshape(-1)
+        id_x_t = np.asarray(observation["id_x_t"], dtype=np.float32).reshape(-1)
+
+        sd_x_t = observation.get("sd_x_t", None)
+        fd_x_t = observation.get("fd_x_t", None)
+
+        if sd_x_t is not None:
+            sd_x_t = np.asarray(sd_x_t, dtype=np.float32).reshape(-1)
+        if fd_x_t is not None:
+            fd_x_t = np.asarray(fd_x_t, dtype=np.float32).reshape(-1)
+
+        out = self._pipeline.step(aam_x_t=aam_x_t, id_x_t=id_x_t, sd_x_t=sd_x_t, fd_x_t=fd_x_t)
+
+        return out if self._return_debug else out["valve_cmd"]
+
+    def predict_torque(self, fd_x_t):
+        fd_x_t = np.asarray(fd_x_t, dtype=np.float32).reshape(-1)
+        return self._pipeline.predict_torque(fd_x_t)
+
+    def predict_state_delta(self, sd_x_t, z_arm_hat):
+        sd_x_t = np.asarray(sd_x_t, dtype=np.float32).reshape(-1)
+        z_arm_hat = np.asarray(z_arm_hat, dtype=np.float32).reshape(-1)
+        return self._pipeline.predict_state_delta(sd_x_t, z_arm_hat)
