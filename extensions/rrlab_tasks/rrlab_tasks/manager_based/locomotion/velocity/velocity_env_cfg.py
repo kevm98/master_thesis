@@ -312,7 +312,18 @@ class RRLABLocomotionVelocityRoughEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
         self.sim.physics_material = self.scene.terrain.physics_material
-        self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
+        # Configure PhysX GPU buffers to reduce memory usage
+        try:
+            self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
+            self.sim.physx.gpu_max_rigid_contact_count = 2**16
+            self.sim.physx.gpu_found_lost_pairs_capacity = 2**16
+            self.sim.physx.gpu_total_aggregate_pairs_capacity = 2**16
+            self.sim.physx.gpu_collision_stack_size = 2**20
+            self.sim.physx.gpu_heap_capacity = 2**22
+            self.sim.physx.gpu_temp_buffer_capacity = 2**20
+        except Exception:
+            # Attributes may not exist in older versions
+            pass
         # update sensor update periods
         # we tick all the sensors based on the smallest update period (physics update period)
         if self.scene.height_scanner is not None:

@@ -47,20 +47,26 @@ class ObstacleAvoidanceSceneCfg(InteractiveSceneCfg):
 
     
     # terrain
-    terrain = CustomTerrainImporterCfg(
+    # terrain = CustomTerrainImporterCfg(
+    #     prim_path="/World/ground",
+    #     terrain_type="generator",
+    #     terrain_generator=UNIMOG_TERRAIN_CFG, 
+    #     # terrain_generator=UNIMOG_TERRAIN_SIMPLE_OBSTACLES_CFG,
+    #     max_init_terrain_level=None, 
+    #     collision_group=0, # -1: collides with all assets in the scene, 0: collides with other assets in the same environment
+    #     physics_material=sim_utils.RigidBodyMaterialCfg(
+    #         friction_combine_mode="multiply",
+    #         restitution_combine_mode="multiply",
+    #         static_friction=1.0, 
+    #         dynamic_friction=1.0,
+    #     ),
+    #     debug_vis=False,  
+    # )
+    terrain = AssetBaseCfg(
         prim_path="/World/ground",
-        terrain_type="generator",
-        terrain_generator=UNIMOG_TERRAIN_CFG, 
-        # terrain_generator=UNIMOG_TERRAIN_SIMPLE_OBSTACLES_CFG,
-        max_init_terrain_level=None, 
-        collision_group=0, # -1: collides with all assets in the scene, 0: collides with other assets in the same environment
-        physics_material=sim_utils.RigidBodyMaterialCfg(
-            friction_combine_mode="multiply",
-            restitution_combine_mode="multiply",
-            static_friction=1.0, 
-            dynamic_friction=1.0,
-        ),
-        debug_vis=False,  
+        spawn=sim_utils.GroundPlaneCfg(),
+        # Optional: adjust position
+        # init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
     
     """
@@ -556,4 +562,15 @@ class ObstacleAvoidanceCfg(ManagerBasedRLEnvCfg):
         self.sim.physics_material.static_friction = 1.0
         self.sim.physics_material.dynamic_friction = 1.0
         self.sim.physics_material.restitution = 0.0
+
+        # Configure PhysX GPU buffers to reduce memory usage
+        try:
+            self.sim.physx.gpu_max_rigid_contact_count = 2**16
+            self.sim.physx.gpu_found_lost_pairs_capacity = 2**16
+            self.sim.physx.gpu_total_aggregate_pairs_capacity = 2**16
+            self.sim.physx.gpu_collision_stack_size = 2**20
+            self.sim.physx.gpu_heap_capacity = 2**22
+            self.sim.physx.gpu_temp_buffer_capacity = 2**20
+        except Exception:
+            pass
 

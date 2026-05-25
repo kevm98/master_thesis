@@ -237,14 +237,12 @@ def main():
     physx = sim_cfg.physx
     
     settings = {
-        "gpu_max_rigid_contact_count": 2**17,
-        "gpu_max_rigid_patch_count": 2**15,
+        "gpu_max_rigid_contact_count": 2**16,
         "gpu_found_lost_pairs_capacity": 2**16,
-        "gpu_found_lost_aggregate_pairs_capacity": 2**13,
-        "gpu_total_aggregate_pairs_capacity": 2**13,
-        "gpu_collision_stack_size": 2**21,
-        "gpu_heap_capacity": 2**25,
-        "gpu_temp_buffer_capacity": 2**23,
+        "gpu_total_aggregate_pairs_capacity": 2**16,
+        "gpu_collision_stack_size": 2**20,
+        "gpu_heap_capacity": 2**22,
+        "gpu_temp_buffer_capacity": 2**20,
     }
     
     for name, value in settings.items():
