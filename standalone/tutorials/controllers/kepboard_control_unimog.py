@@ -233,7 +233,23 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
 def main():
     """Main function."""
     # Load kit helper
-    sim_cfg = sim_utils.SimulationCfg(dt=0.01, device=args_cli.device)
+    sim_cfg = sim_utils.SimulationCfg(dt=0.01, device=args_cli.device, render_interval=2)
+    physx = sim_cfg.physx
+    
+    settings = {
+        "gpu_max_rigid_contact_count": 2**16,
+        "gpu_found_lost_pairs_capacity": 2**16,
+        "gpu_total_aggregate_pairs_capacity": 2**16,
+        "gpu_collision_stack_size": 2**20,
+        "gpu_heap_capacity": 2**22,
+        "gpu_temp_buffer_capacity": 2**20,
+    }
+    
+    for name, value in settings.items():
+        if hasattr(physx, name):
+            print(f"[INFO] Setting sim.physx.{name} = {value}")
+            setattr(physx, name, value)
+    
     sim = sim_utils.SimulationContext(sim_cfg)
     # Set main camera
     sim.set_camera_view([11, 8, 1.3], [0.0, 0.0, 0.0])
